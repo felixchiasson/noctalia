@@ -718,6 +718,7 @@ struct DockMonitorOverride {
   std::optional<std::int32_t> mainAxisPadding;
   std::optional<std::int32_t> crossAxisPadding;
   std::optional<std::int32_t> itemSpacing;
+  std::optional<ColorSpec> background;
   std::optional<float> backgroundOpacity;
   std::optional<bool> compositorBlur;
   std::optional<ColorSpec> border;
@@ -764,6 +765,7 @@ struct DockConfig {
   std::int32_t mainAxisPadding = 16; // inner padding along the icon row (main axis)
   std::int32_t crossAxisPadding = 8; // inner padding perpendicular to the icon row
   std::int32_t itemSpacing = 6;      // gap between items
+  ColorSpec background = colorSpecFromRole(ColorRole::Surface);
   float backgroundOpacity = 0.88F;
   bool compositorBlur = true;
   // Inside outline for the dock background.

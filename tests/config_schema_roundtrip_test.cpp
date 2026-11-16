@@ -413,6 +413,7 @@ location = "https://example.invalid/bad"
     c.dock.iconSize = 40;
     c.dock.iconShadow = true;
     c.dock.iconSaturation = 0.82F;
+    c.dock.background = colorSpecFromRole(ColorRole::SecondaryContainer);
     c.dock.border = colorSpecFromRole(ColorRole::Primary);
     c.dock.borderWidth = 1.5F;
     c.dock.radius = 20;
@@ -431,6 +432,7 @@ location = "https://example.invalid/bad"
         .iconSize = 36,
         .iconShadow = false,
         .iconSaturation = 0.25F,
+        .background = colorSpecFromConfigString("#12345680", "dock.monitor.laptop.background"),
         .autoHide = true,
         .autoHideRevealDelayMs = 0,
         .launcherPosition = DockLauncherPosition::End,
@@ -751,6 +753,35 @@ location = "https://example.invalid/bad"
       Diagnostics d;
       readInto(t, n, notificationSchema(), "notification", d);
       TEST_CHECK(n.width == static_cast<std::int32_t>(*kNotificationWidthRange.max));
+    }
+  }
+
+  void checkDockBackgroundOverrides() {
+    DockConfig dock;
+    TEST_CHECK(dock.background == colorSpecFromRole(ColorRole::Surface));
+    Diagnostics diagnostics;
+    readInto(
+        toml::parse(R"(
+background = "primary_container"
+background_opacity = 0.5
+[monitor.laptop]
+background = "#12345680"
+[monitor.external]
+icon_size = 40
+)"),
+        dock, dockSchema(), "dock", diagnostics
+    );
+    TEST_CHECK(diagnostics.entries.empty());
+    TEST_CHECK(dock.background == colorSpecFromRole(ColorRole::PrimaryContainer));
+    TEST_CHECK(dock.monitorOverrides.size() == 2);
+    for (const auto& override : dock.monitorOverrides) {
+      const auto resolved = resolveDockMonitorOverride(dock, override);
+      TEST_CHECK(resolved.backgroundOpacity == 0.5F);
+      if (override.tableName == "laptop") {
+        TEST_CHECK(resolved.background == colorSpecFromConfigString("#12345680", "dock.monitor.laptop.background"));
+      } else {
+        TEST_CHECK(resolved.background == dock.background);
+      }
     }
   }
 
@@ -1336,6 +1367,7 @@ widget_spacing = 8
   checkStorageKeySourceValidation();
   checkPanelFloatingLayerValidation();
   checkClamps();
+  checkDockBackgroundOverrides();
   checkMonitorOverrideChangeSet();
   checkPluginAutoUpdateMode();
   checkAutoUpdateScopeSelection();

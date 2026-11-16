@@ -242,6 +242,11 @@ namespace settings::registry {
           sliderFor(dock.borderWidth, noctalia::config::schema::kDockBorderWidthRange, false), "outline stroke", true
       ));
       entries.push_back(makeEntry(
+          SettingsSection::Dock, "effects", tr("settings.schema.dock.background.label"),
+          tr("settings.schema.dock.background.description"), path("background"), colorSpecPicker(dock.background),
+          "background color fill"
+      ));
+      entries.push_back(makeEntry(
           SettingsSection::Dock, "effects", tr("settings.schema.shared.background-opacity.label"),
           tr("settings.schema.dock.background-opacity.description"), path("background_opacity"),
           sliderFor(dock.backgroundOpacity, noctalia::config::schema::kUnitRange, false),

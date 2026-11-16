@@ -27,6 +27,8 @@ int main() {
   TEST_CHECK(isKnownConfigPath({"wallpaper", "automation", "interval_seconds"}));
   TEST_CHECK(isKnownConfigPath({"wallpaper", "fill_color"}));
   TEST_CHECK(isKnownConfigPath({"dock", "icon_size"}));
+  TEST_CHECK(isKnownConfigPath({"dock", "background"}));
+  TEST_CHECK(isKnownConfigPath({"dock", "monitor", "DP-1", "background"}));
   TEST_CHECK(isKnownConfigPath({"dock", "radius_top_left"}));
   TEST_CHECK(isKnownConfigPath({"dock", "monitor", "DP-1", "icon_size"}));
   TEST_CHECK(isKnownConfigPath({"dock", "monitor", "DP-1", "pinned"}));

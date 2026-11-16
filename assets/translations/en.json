@@ -2340,6 +2340,10 @@
           "description": "How long the pointer must stay at the screen edge before a hidden dock reveals; 0 reveals immediately",
           "label": "Reveal Delay"
         },
+        "background": {
+          "description": "Color role for the dock background; fixed hex colors are also supported",
+          "label": "Background color"
+        },
         "background-opacity": {
           "description": "Background opacity of the dock"
         },
