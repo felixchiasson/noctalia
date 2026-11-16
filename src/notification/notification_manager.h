@@ -163,6 +163,8 @@ public:
   bool doNotDisturb() const noexcept;
   bool toggleDoNotDisturb();
   void setStateCallback(StateCallback callback);
+  // Coalesced history updates, including changes that leave the global unread indicator unchanged.
+  void setHistoryChangeCallback(StateCallback callback);
   void setSoundPlayer(class SoundPlayer* soundPlayer);
 
   // Bar indicator: true when at least one notification was added since the user last
@@ -186,7 +188,7 @@ private:
   void upsertHistory(const Notification& notification, bool active, std::optional<CloseReason> closeReason);
   void markHistoryClosed(uint32_t id, CloseReason reason);
   void rebuildHistoryIndex();
-  void schedulePersistHistory();
+  void scheduleHistoryUpdate();
   void persistHistoryToDisk();
   void emitPendingDBusClose(uint32_t id, CloseReason reason);
   // Live notification, or an expired one still awaiting its deferred NotificationClosed; nullptr otherwise.
@@ -235,6 +237,7 @@ private:
   std::unordered_map<uint32_t, InternalNotificationActionHandler> m_internalActionHandlers;
   CloseCallback m_closeCallback;
   StateCallback m_stateCallback;
+  StateCallback m_historyChangeCallback;
   ReplyCallback m_replyCallback;
   int m_nextCallbackToken{0};
   uint32_t m_nextId{1};

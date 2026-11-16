@@ -19,6 +19,7 @@ struct wl_output;
 class CompositorPlatform;
 class ConfigService;
 class IpcService;
+class DockBadgeService;
 class RenderContext;
 struct PointerEvent;
 struct WaylandOutput;
@@ -38,6 +39,7 @@ public:
 
   bool initialize(CompositorPlatform& platform, ConfigService* config, RenderContext* renderContext);
   void reload();
+  void setDockBadgeService(const DockBadgeService* service) { m_dockBadges = service; }
   // Re-resolves item icons on the existing surfaces; never recreates the layer surface.
   void onIconThemeChanged();
   void show();
@@ -77,6 +79,7 @@ private:
   void endDrag(shell::dock::DockInstance& instance, bool commit);
   void reevaluateSmartAutoHide();
 
+  const DockBadgeService* m_dockBadges = nullptr;
   CompositorPlatform* m_platform = nullptr;
   ConfigService* m_config = nullptr;
   RenderContext* m_renderContext = nullptr;

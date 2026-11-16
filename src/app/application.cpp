@@ -7,6 +7,7 @@
 #include "core/deferred_call.h"
 #include "core/log.h"
 #include "dbus/accounts/accounts_service.h"
+#include "dbus/dock/dock_badge_service.h"
 #include "dbus/idle/screensaver_poll_source.h"
 #include "dbus/idle/screensaver_service.h"
 #include "dbus/logind/logind_service.h"
@@ -128,6 +129,8 @@ Application::Application()
     // Keep bar widgets in sync with notification state changes.
     scheduleNotificationShellRefresh();
   });
+
+  m_notificationManager.setHistoryChangeCallback([this] { scheduleNotificationShellRefresh(); });
 
   m_notificationManager.setStateCallback([this] {
     if (m_notificationManager.doNotDisturb()) {

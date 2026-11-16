@@ -3,8 +3,7 @@
 #include "compositors/compositor_platform.h"
 #include "config/config_types.h"
 #include "core/log.h"
-#include "notification/notification_display_name.h"
-#include "notification/notification_manager.h"
+#include "notification/app_notification_counts.h"
 #include "shell/dock/pinned_apps.h"
 #include "shell/wayland/wayland_toplevels.h"
 #include "system/app_identity.h"
@@ -112,22 +111,9 @@ namespace shell::dock {
       }
     }
 
-    std::unordered_map<std::string, std::size_t> notificationCounts;
-    if (deps.config.showNotificationBadges && deps.notifications != nullptr) {
-      for (const auto& history : deps.notifications->history()) {
-        if (history.seen) {
-          continue;
-        }
-        const auto& notification = history.notification;
-        // An explicit desktop-entry hint owns identity; appName is used only when it is absent.
-        const std::string_view key = notification.desktopEntry.has_value() && !notification.desktopEntry->empty()
-            ? std::string_view(*notification.desktopEntry)
-            : std::string_view(notification.appName);
-        if (const auto entry = findNotificationDesktopEntry(key)) {
-          ++notificationCounts[StringUtils::toLower(entry->id)];
-        }
-      }
-    }
+    const auto notificationCounts = deps.config.showNotificationBadges
+        ? appNotificationCounts(deps.notifications, deps.dockBadges)
+        : std::unordered_map<std::string, std::size_t>{};
 
     snapshot.items.reserve(itemEntries.size());
     for (const auto& entry : itemEntries) {

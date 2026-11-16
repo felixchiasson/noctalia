@@ -851,6 +851,7 @@ bool Dock::syncInstanceModel(shell::dock::DockInstance& instance) {
       .globalActiveIdLower = activeIdLower,
       .pinnedEntries = instance.pinnedEntries,
       .notifications = notify::instance(),
+      .dockBadges = m_dockBadges,
       .sourceSerial = instance.modelSerial,
   });
   shell::dock::keepRunningItemOrder(instance.snapshot, next, instance.pinnedEntries.size());

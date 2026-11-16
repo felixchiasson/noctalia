@@ -160,7 +160,7 @@ void NotificationManager::cleanupOldHistoryEntries() {
   m_history = std::move(kept);
   ++m_changeSerial;
   rebuildHistoryIndex();
-  schedulePersistHistory();
+  scheduleHistoryUpdate();
   notifyUnreadStateChangedIfNeeded(hadUnreadBefore);
 }
 
@@ -190,7 +190,7 @@ void NotificationManager::upsertHistory(
   }
 
   rebuildHistoryIndex();
-  schedulePersistHistory();
+  scheduleHistoryUpdate();
 }
 
 void NotificationManager::markHistoryClosed(uint32_t id, CloseReason reason) {
@@ -208,7 +208,7 @@ void NotificationManager::markHistoryClosed(uint32_t id, CloseReason reason) {
   }
   entry.closeReason = reason;
   entry.eventSerial = ++m_changeSerial;
-  schedulePersistHistory();
+  scheduleHistoryUpdate();
 }
 
 bool NotificationManager::updateBody(uint32_t id, std::string body) {
@@ -228,7 +228,7 @@ bool NotificationManager::updateBody(uint32_t id, std::string body) {
     // rewrites itself is not a new notification the user has yet to read.
     m_history[entry->second].notification.body = n.body;
     m_history[entry->second].eventSerial = ++m_changeSerial;
-    schedulePersistHistory();
+    scheduleHistoryUpdate();
   } else {
     ++m_changeSerial;
   }
@@ -550,7 +550,7 @@ void NotificationManager::dismissAfterInvoke(uint32_t id) {
     m_history[histIt->second].notification.actions.clear();
     m_history[histIt->second].active = false;
     ++m_changeSerial;
-    schedulePersistHistory();
+    scheduleHistoryUpdate();
   }
 }
 
@@ -730,7 +730,7 @@ void NotificationManager::removeHistoryEntry(uint32_t id, std::optional<CloseRea
   m_history.erase(m_history.begin() + static_cast<std::ptrdiff_t>(it->second));
   ++m_changeSerial;
   rebuildHistoryIndex();
-  schedulePersistHistory();
+  scheduleHistoryUpdate();
   notifyUnreadStateChangedIfNeeded(hadUnreadBefore);
 }
 
@@ -748,7 +748,7 @@ void NotificationManager::clearHistory() {
   m_historyIndex.clear();
   ++m_changeSerial;
   markNotificationHistorySeen();
-  schedulePersistHistory();
+  scheduleHistoryUpdate();
 }
 
 std::vector<uint32_t> NotificationManager::expiredIds() const {
@@ -889,6 +889,10 @@ bool NotificationManager::toggleDoNotDisturb() {
 
 void NotificationManager::setStateCallback(StateCallback callback) { m_stateCallback = std::move(callback); }
 
+void NotificationManager::setHistoryChangeCallback(StateCallback callback) {
+  m_historyChangeCallback = std::move(callback);
+}
+
 void NotificationManager::setSoundPlayer(SoundPlayer* soundPlayer) { m_soundPlayer = soundPlayer; }
 
 bool NotificationManager::hasUnreadNotificationHistory() const noexcept {
@@ -903,17 +907,20 @@ void NotificationManager::markNotificationHistorySeen() {
   for (auto& entry : m_history) {
     entry.seen = true;
   }
-  schedulePersistHistory();
+  scheduleHistoryUpdate();
   notifyUnreadStateChangedIfNeeded(hadUnreadBefore);
 }
 
-void NotificationManager::schedulePersistHistory() {
+void NotificationManager::scheduleHistoryUpdate() {
   if (m_persistScheduled) {
     return;
   }
   m_persistScheduled = true;
   DeferredCall::callLater([this] {
     m_persistScheduled = false;
+    if (m_historyChangeCallback) {
+      m_historyChangeCallback();
+    }
     persistHistoryToDisk();
   });
 }
