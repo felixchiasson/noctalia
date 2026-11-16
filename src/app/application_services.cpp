@@ -11,6 +11,7 @@
 #include "dbus/accounts/accounts_service.h"
 #include "dbus/bluetooth/bluetooth_agent.h"
 #include "dbus/bluetooth/bluetooth_service.h"
+#include "dbus/dock/dock_badge_service.h"
 #include "dbus/idle/screensaver_service.h"
 #include "dbus/logind/logind_service.h"
 #include "dbus/modem/modem_manager_service.h"
@@ -1731,6 +1732,16 @@ void Application::initSessionBusServices() {
   auto shouldRefreshControlCenter = [this] { return m_panelManager.isOpenPanel("control-center"); };
 
   if (m_bus != nullptr) {
+    try {
+      m_dockBadgeService = std::make_unique<DockBadgeService>(*m_bus);
+      m_dockBadgeService->setChangeCallback([this] { scheduleNotificationShellRefresh(); });
+      m_dockBadgeService->start();
+      m_dock.setDockBadgeService(m_dockBadgeService.get());
+    } catch (const std::exception& error) {
+      m_dockBadgeService.reset();
+      kLog.warn("dock badges unavailable; using notification history: {}", error.what());
+    }
+
     try {
       m_debugService = std::make_unique<DebugService>(*m_bus, m_notificationManager);
       kLog.info("debug service active on dev.noctalia.Debug");

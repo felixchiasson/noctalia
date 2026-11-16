@@ -480,6 +480,7 @@ _noctalia_sources = files(
   'src/dbus/bluetooth/bluetooth_service.cpp',
   'src/dbus/bluetooth/bluetooth_uuid_names.cpp',
   'src/dbus/idle/screensaver_service.cpp',
+  'src/dbus/dock/dock_badge_service.cpp',
   'src/dbus/logind/logind_service.cpp',
   'src/dbus/modem/modem_manager_service.cpp',
   'src/dbus/mpris/mpris_art.cpp',
@@ -540,6 +541,7 @@ _noctalia_sources = files(
   'src/net/url_open.cpp',
   'src/notification/notification_manager.cpp',
   'src/notification/notification_filter.cpp',
+  'src/notification/app_notification_counts.cpp',
   'src/notification/notification_display_name.cpp',
   'src/notification/notification_history_store.cpp',
   'src/pipewire/pipewire_service.cpp',
@@ -1552,6 +1554,19 @@ if build_tests
       ],
       depends: bluetooth_connect_pass_integration_exe,
       timeout: 60,
+    )
+  endif
+
+  dock_badge_integration_exe = executable('dock_badge_integration_test',
+    sources: files('tests/dock_badge_integration_test.cpp'),
+    dependencies: noctalia_core_dep,
+    override_options: ['b_ndebug=false'],
+  )
+  if dbus_run_session.found()
+    test('dock_badge_integration',
+      dbus_run_session,
+      args: ['--', dock_badge_integration_exe.full_path()],
+      depends: dock_badge_integration_exe,
     )
   endif
 

@@ -2387,7 +2387,7 @@
           "description": "Inset from each end of the dock along its main axis"
         },
         "icon-badges": {
-          "description": "Choose window counts, unread notifications, or no badges on dock icons",
+          "description": "Choose window counts, app unread counts with notification history fallback, or no badges",
           "label": "Dock Icon Badges"
         },
         "icon-saturation": {

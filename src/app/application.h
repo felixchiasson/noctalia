@@ -141,6 +141,7 @@ class PowerProfilesService;
 class ScreenSaverPollSource;
 class ScreenSaverService;
 class SessionBus;
+class DockBadgeService;
 class SessionBusPollSource;
 class SoundPlayer;
 class SystemBus;
@@ -274,6 +275,7 @@ private:
   CalendarService m_calendarService;
   CalendarReminderMonitor m_calendarReminderMonitor{m_configService, m_notificationManager};
   std::unique_ptr<SessionBus> m_bus;
+  std::unique_ptr<DockBadgeService> m_dockBadgeService;
   // Set when the early session bus connection fails. Reported once i18n has been
   // initialized in initStyleThemeAndWayland().
   std::optional<std::string> m_earlySessionBusError;

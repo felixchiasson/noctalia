@@ -8,6 +8,7 @@
 #include <vector>
 
 class CompositorPlatform;
+class DockBadgeService;
 class NotificationManager;
 struct DockConfig;
 struct ToplevelInfo;
@@ -45,6 +46,7 @@ namespace shell::dock {
     const std::string& globalActiveIdLower;
     const std::vector<DesktopEntry>& pinnedEntries;
     const NotificationManager* notifications = nullptr;
+    const DockBadgeService* dockBadges = nullptr;
     std::uint64_t sourceSerial = 0;
   };
 
