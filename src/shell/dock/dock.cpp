@@ -429,7 +429,9 @@ void Dock::pruneCachedToplevelHandles() {
 }
 
 void Dock::detachInstanceState(shell::dock::DockInstance& inst) {
-  m_previousItemsByOutput.insert_or_assign(inst.outputName, inst.snapshot.items);
+  if (inst.config.showRunning) {
+    m_previousItemsByOutput.insert_or_assign(inst.outputName, inst.snapshot.items);
+  }
 
   // The instance's InputDispatcher is destroyed before its scene, so it cannot report the hovered
   // item's destruction. Drop the tooltip (and any pending show timer holding that item) now; the
@@ -811,8 +813,10 @@ void Dock::createInstance(const WaylandOutput& output) {
     instance->pinnedOverridden = override->pinned.has_value();
   }
 
-  if (const auto it = m_previousItemsByOutput.find(output.name); it != m_previousItemsByOutput.end()) {
-    instance->snapshot.items = it->second;
+  if (cfg.showRunning) {
+    if (const auto it = m_previousItemsByOutput.find(output.name); it != m_previousItemsByOutput.end()) {
+      instance->snapshot.items = it->second;
+    }
   }
 
   const auto& shadowConfig = m_config->config().shell.shadow;
@@ -856,7 +860,9 @@ void Dock::createInstance(const WaylandOutput& output) {
     return;
   }
 
-  m_previousItemsByOutput.erase(output.name);
+  if (cfg.showRunning) {
+    m_previousItemsByOutput.erase(output.name);
+  }
   m_surfaceMap[instance->surface->wlSurface()] = instance.get();
   m_instances.push_back(std::move(instance));
 }
