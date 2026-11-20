@@ -1,5 +1,6 @@
 #pragma once
 
+#include "render/core/mat3.h"
 #include "render/core/renderer.h"
 #include "render/core/texture_handle.h"
 
@@ -20,7 +21,6 @@ using PangoLayout = struct _PangoLayout;
 class RenderBackend;
 class TextureManager;
 struct Color;
-struct Mat3;
 
 // Pango/Cairo-backed text renderer.
 //
@@ -58,8 +58,6 @@ public:
   void cleanup();
 
   void setFontFamily(std::string family);
-  // Multiplier applied to every text size (the system font size over the reference body size).
-  void setTextScale(float scale);
   void setBaseDirection(bool rtl);
   void notifyFontConfigChanged();
 
@@ -90,11 +88,12 @@ public:
       std::vector<TextCharSpan>& outSpans, const TextFont& font = {}
   );
 
+  // bufferScale is framebuffer pixels per logical pixel; zero uses contentScale.
   void draw(
       float contentScale, float surfaceWidth, float surfaceHeight, float x, float baselineY, std::string_view text,
       float fontSize, const Color& color, const Mat3& transform, const TextFont& font = {}, float maxWidth = 0.0F,
       int maxLines = 0, TextAlign align = TextAlign::Start, TextEllipsize ellipsize = TextEllipsize::End,
-      bool useMarkup = false
+      bool useMarkup = false, Vec2 bufferScale = {}
   );
 
 private:
@@ -217,7 +216,6 @@ private:
   bool m_fontConfigInitialized = false;
   std::uint64_t m_syncedFontGeneration = 0;
   std::string m_fontFamily = "sans-serif";
-  float m_textScale = 1.0F;
   bool m_baseDirRtl = false;
 
   PangoFontMap* m_fontMap = nullptr;      // owned

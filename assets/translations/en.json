@@ -2004,6 +2004,10 @@
           "description": "Font family for the shell interface",
           "label": "Font Family"
         },
+        "font-scale": {
+          "description": "Make all shell text larger or smaller without changing icons or spacing",
+          "label": "Font Scale"
+        },
         "global-shadow-alpha": {
           "description": "Global surface shadow opacity"
         },

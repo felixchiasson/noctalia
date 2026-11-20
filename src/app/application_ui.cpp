@@ -105,6 +105,7 @@ void Application::initUi() {
 void Application::initUiRenderSurfacesAndSettings() {
 
   m_renderContext.initialize(m_glShared);
+  m_renderContext.setAsyncTextureCache(&m_asyncTextureCache);
   m_glShared.setGraphicsResetCallback([this](RenderGraphicsResetStatus status) { onGraphicsReset(status); });
   if (!m_glShared.hasSharedContext()) {
     m_asyncTextureCache.setMakeCurrentCallback([this] { m_renderContext.backend().makeCurrentNoSurface(); });
@@ -299,11 +300,13 @@ void Application::scheduleGreeterAutoSync() {
 bool Application::syncShellFont() {
   text::refreshSystemFont();
   std::string family = text::resolveFontFamily(m_configService.config().shell.fontFamily);
-  const float scale = text::currentSystemFont().textScale(Style::fontSizeBody);
+  const float scale = m_configService.config().accessibility.fontScale;
+  // Only the settings window follows the system font size, like other desktop apps; it rebuilds itself.
+  m_settingsWindow.setTextScale(scale * text::currentSystemFont().textScale(Style::fontSizeBody));
   if (family == m_appliedFontFamily && scale == m_appliedTextScale) {
     return false;
   }
-  kLog.info("shell font: family='{}' text scale {:.3f}", family, scale);
+  kLog.info("shell font: family='{}' text scale {:.2f}", family, scale);
   m_renderContext.setTextFontFamily(family);
   m_renderContext.setTextScale(scale);
   m_appliedFontFamily = std::move(family);
@@ -667,7 +670,6 @@ void Application::initPanelManagerAndPanels() {
       .clipboard = &m_clipboardService,
       .accounts = m_accountsService.get(),
       .thumbnails = &m_thumbnailService,
-      .asyncTextures = &m_asyncTextureCache,
   });
   ControlCenterPanel* controlCenterPanelPtr = controlCenterPanel.get();
   m_panelManager.registerPanel("control-center", std::move(controlCenterPanel));
@@ -812,9 +814,7 @@ void Application::initNotificationAndOsd() {
 
   TooltipManager::instance().initialize(m_wayland, &m_configService, &m_renderContext);
   m_osdOverlay.initialize(m_wayland, m_compositorPlatform, &m_configService, &m_renderContext);
-  m_windowSwitcher.initialize(
-      m_wayland, &m_renderContext, m_compositorPlatform, &m_configService, &m_asyncTextureCache
-  );
+  m_windowSwitcher.initialize(m_wayland, &m_renderContext, m_compositorPlatform, &m_configService);
   m_configService.addReloadCallback([this] { m_windowSwitcher.onConfigReload(); });
   m_configService.addReloadCallback([this] { m_osdOverlay.onConfigReload(); });
   m_scriptApi.setShowOsdHook(
