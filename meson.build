@@ -381,6 +381,8 @@ foreach _p : [
     'protocols/wlr-screencopy-unstable-v1.xml'],
   ['wlr-output-management-unstable-v1',
     'protocols/wlr-output-management-unstable-v1.xml'],
+  ['wlr-output-power-management-unstable-v1',
+    'protocols/wlr-output-power-management-unstable-v1.xml'],
 ]
   _name = _p[0]
   _xml  = _p[1]
@@ -914,6 +916,7 @@ _noctalia_sources = files(
   'src/compositors/compositor_detect.cpp',
   'src/compositors/compositor_event_subscriptions.cpp',
   'src/compositors/compositor_runtime.cpp',
+  'src/compositors/unix_socket.cpp',
   'src/compositors/dwl/dwl_workspace_backend.cpp',
   'src/compositors/ext_workspace/ext_workspace_output_backend.cpp',
   'src/compositors/ext_workspace/ext_workspace_backend.cpp',
@@ -956,6 +959,7 @@ _noctalia_sources = files(
   'src/shell/wayland/compositor_globals.cpp',
   'src/shell/wayland/foreign_toplevels.cpp',
   'src/shell/wayland/output_management_globals.cpp',
+  'src/shell/wayland/output_power_globals.cpp',
   'src/shell/wayland/background_effect_globals.cpp',
   'src/shell/wayland/layer_shell.cpp',
   'src/shell/wayland/layer_surface.cpp',
@@ -1237,6 +1241,7 @@ if build_tests
     'bluetooth_uuid_names',
     'button_layout',
     'caldav_client',
+    'calendar_cache',
     'calendar_cache_permissions',
     'calendar_credential_store',
     'calendar_discovery_state',
