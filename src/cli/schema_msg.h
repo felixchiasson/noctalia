@@ -292,6 +292,11 @@ namespace noctalia::cli {
       Flag{"--no-pipe-to-command", {}, {}, "Set pipe_to_command = false for this call", {}, {}, false, false},
       Flag{"--freeze-screen", {}, {}, "Set freeze_screen = true for this call", {}, {}, false, false},
       Flag{"--no-freeze-screen", {}, {}, "Set freeze_screen = false for this call", {}, {}, false, false},
+      Flag{
+          "--region-magnifier", {}, {}, "Show the magnifier and freeze the screen for region selection", {}, {}, false,
+          false
+      },
+      Flag{"--no-region-magnifier", {}, {}, "Hide the magnifier for region selection", {}, {}, false, false},
       Flag{"--confirm-region", {}, {}, "Set confirm_region = true for this call", {}, {}, false, false},
       Flag{"--no-confirm-region", {}, {}, "Set confirm_region = false for this call", {}, {}, false, false},
       Flag{"--remember-last-region", {}, {}, "Set remember_last_region = true for this call", {}, {}, false, false},

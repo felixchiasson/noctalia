@@ -14,6 +14,7 @@
 #include "render/core/renderer.h"
 #include "render/core/texture_manager.h"
 #include "render/render_context.h"
+#include "render/scene/image_node.h"
 #include "render/scene/input_area.h"
 #include "render/scene/input_dispatcher.h"
 #include "render/scene/node.h"
@@ -30,6 +31,7 @@
 #include "wayland/wayland_seat.h"
 
 #include <algorithm>
+#include <array>
 #include <cmath>
 #include <cstdio>
 #include <functional>
@@ -44,6 +46,106 @@ namespace capture {
     constexpr float kDimensionFontSize = 14.0F;
     constexpr float kDimensionPaddingX = 6.0F;
     constexpr float kDimensionPaddingY = 4.0F;
+
+    class RegionMagnifier : public ImageNode {
+    public:
+      RegionMagnifier() {
+        setSize(kSize, kSize);
+        setTextureSize(kPixels, kPixels);
+        setBorder(rgba(0.0F, 0.0F, 0.0F, 1.0F), 2.0F);
+        setHitTestVisible(false);
+        setVisible(false);
+
+        constexpr float center = kSize * 0.5F;
+        constexpr float gap = 3.0F;
+        constexpr float length = 11.0F;
+        const auto addTick = [this](float x, float y, float width, float height) {
+          auto tick = ui::box({
+              .fill = fixedColorSpec(rgba(1.0F, 1.0F, 1.0F, 1.0F)),
+              .width = width,
+              .height = height,
+              .configure = [x, y](Box& box) {
+                box.setPosition(x, y);
+                box.setBorder(rgba(0.0F, 0.0F, 0.0F, 1.0F), 1.0F);
+              },
+          });
+          addChild(std::move(tick));
+        };
+        addTick(center - gap - length, center - 1.5F, length, 3.0F);
+        addTick(center + gap, center - 1.5F, length, 3.0F);
+        addTick(center - 1.5F, center - gap - length, 3.0F, length);
+        addTick(center - 1.5F, center + gap, 3.0F, length);
+      }
+
+      ~RegionMagnifier() override {
+        if (m_textures != nullptr) {
+          m_textures->unload(m_texture);
+        }
+      }
+
+      void update(TextureManager& textures, const ScreencopyImage& source, double x, double y, float w, float h) {
+        if (w < kSize || h < kSize || x < 0 || y < 0 || x >= w || y >= h) {
+          setVisible(false);
+          return;
+        }
+
+        // The frozen image is at native resolution, while the pointer is in surface coordinates.
+        const int pixelX = static_cast<int>(x * source.width / w);
+        const int pixelY = static_cast<int>(y * source.height / h);
+        const auto pixel = std::pair{pixelX, pixelY};
+        if (!m_texture.valid() || m_sampledPixel != pixel) {
+          std::array<std::uint8_t, kPixels * kPixels * 4> pixels{};
+          for (int row = 0; row < kPixels; ++row) {
+            const int sourceY = pixelY + row - kPixels / 2;
+            for (int column = 0; column < kPixels; ++column) {
+              const int sourceX = pixelX + column - kPixels / 2;
+              auto* destination = pixels.data() + (row * kPixels + column) * 4;
+              if (sourceX >= 0 && sourceX < source.width && sourceY >= 0 && sourceY < source.height) {
+                const auto offset =
+                    (static_cast<std::size_t>(sourceY) * static_cast<std::size_t>(source.width)
+                     + static_cast<std::size_t>(sourceX)) * 4;
+                std::copy_n(source.rgba.data() + offset, 4, destination);
+              } else {
+                destination[3] = 255;
+              }
+            }
+          }
+          m_textures = &textures;
+          if (!textures.updateSubImage(m_texture, pixels.data(), 0, 0, kPixels, kPixels, TextureDataFormat::Rgba)
+              && !textures.replace(
+                  m_texture, pixels.data(), kPixels, kPixels, TextureDataFormat::Rgba, TextureFilter::Nearest
+              )) {
+            setVisible(false);
+            return;
+          }
+          m_sampledPixel = pixel;
+          setTextureId(m_texture.id);
+        }
+
+        constexpr float offset = 24.0F;
+        const auto place = [](float pointer, float extent, float direction) {
+          const float next = pointer + (direction > 0 ? offset : -offset - kSize);
+          const float flipped = pointer + (direction > 0 ? -offset - kSize : offset);
+          return std::clamp(next < 0 || next + kSize > extent ? flipped : next, 0.0F, extent - kSize);
+        };
+        setPosition(place(static_cast<float>(x), w, 1.0F), place(static_cast<float>(y), h, -1.0F));
+        setVisible(true);
+      }
+
+    protected:
+      void doInvalidateGpuResources(Renderer& renderer) override {
+        renderer.textureManager().unload(m_texture);
+        setTextureId({});
+        setVisible(false);
+      }
+
+    private:
+      static constexpr int kPixels = 25;
+      static constexpr float kSize = kPixels * 4.0F;
+      TextureManager* m_textures = nullptr;
+      TextureHandle m_texture;
+      std::pair<int, int> m_sampledPixel{};
+    };
 
     std::uint32_t cursorShapeForDragMode(capture::DragMode mode) {
       switch (mode) {
@@ -195,6 +297,8 @@ namespace capture {
     std::unique_ptr<Node> sceneRoot;
     InputArea* input = nullptr;
     Image* backdrop = nullptr;
+    RegionMagnifier* magnifier = nullptr;
+    std::optional<std::pair<double, double>> magnifierPointer;
     Box* dimTop = nullptr;
     Box* dimBottom = nullptr;
     Box* dimLeft = nullptr;
@@ -242,6 +346,8 @@ namespace capture {
   void ScreenshotRegionOverlay::setShowRegionHint(bool show) { m_showRegionHint = show; }
 
   void ScreenshotRegionOverlay::setShowRegionDimensions(bool show) { m_showRegionDimensions = show; }
+
+  void ScreenshotRegionOverlay::setShowRegionMagnifier(bool show) { m_showRegionMagnifier = show; }
 
   void ScreenshotRegionOverlay::applyCursorShape(std::uint32_t shape) {
     for (auto& instance : m_instances) {
@@ -470,7 +576,7 @@ namespace capture {
     m_dragging = false;
   }
 
-  void ScreenshotRegionOverlay::prepareFrame(Instance& inst, bool /*needsUpdate*/, bool /*needsLayout*/) {
+  void ScreenshotRegionOverlay::prepareFrame(Instance& inst, bool /*needsUpdate*/, bool needsLayout) {
     if (!m_active || m_renderContext == nullptr || inst.surface == nullptr) {
       return;
     }
@@ -494,7 +600,10 @@ namespace capture {
         || static_cast<std::uint32_t>(std::round(inst.sceneRoot->width())) != width
         || static_cast<std::uint32_t>(std::round(inst.sceneRoot->height())) != height;
     if (!needsSceneBuild) {
-      updateSelectionVisuals();
+      if (needsLayout) {
+        updateSelectionVisuals();
+      }
+      updateMagnifier(inst, renderer);
       return;
     }
 
@@ -819,6 +928,12 @@ namespace capture {
     inst.input = input.get();
     inst.sceneRoot->addChild(std::move(input));
 
+    if (m_showRegionMagnifier && !m_fullscreenPick && frozen != nullptr) {
+      auto magnifier = std::make_unique<RegionMagnifier>();
+      inst.magnifier = magnifier.get();
+      inst.sceneRoot->addChild(std::move(magnifier));
+    }
+
     if (m_fullscreenPick) {
       auto pickerBar = buildFullscreenPickerBar(*m_wayland, [this](wl_output* output) {
         DeferredCall::callLater([this, output] { completeFullscreenPick(output); });
@@ -845,6 +960,58 @@ namespace capture {
     }
 
     updateSelectionVisuals();
+    updateMagnifier(inst, renderer);
+  }
+
+  void ScreenshotRegionOverlay::updateMagnifier(Instance& inst, Renderer& renderer) {
+    if (inst.magnifier == nullptr) {
+      return;
+    }
+    if (!inst.magnifierPointer.has_value()) {
+      inst.magnifier->setVisible(false);
+      return;
+    }
+    const auto [x, y] = *inst.magnifierPointer;
+    if (const auto* frozen = frozenImageForOutput(m_frozenScreenshots, inst.output)) {
+      inst.magnifier->update(renderer.textureManager(), *frozen, x, y, inst.sceneRoot->width(), inst.sceneRoot->height());
+    }
+  }
+
+  void ScreenshotRegionOverlay::updateMagnifierPointer(const Instance& target, const PointerEvent& event) {
+    using Type = PointerEvent::Type;
+    if (event.touch || (event.type != Type::Enter && event.type != Type::Motion && event.type != Type::Leave)) {
+      return;
+    }
+
+    const WaylandOutput* pointerOutput = nullptr;
+    double globalX = 0.0;
+    double globalY = 0.0;
+    if (event.type != Type::Leave) {
+      const auto* eventOutput = findOutput(*m_wayland, target.output);
+      if (eventOutput != nullptr) {
+        globalX = eventOutput->logicalX + event.sx;
+        globalY = eventOutput->logicalY + event.sy;
+        // During a drag, the original surface can still receive motion after the pointer crosses outputs.
+        if (event.sx >= 0 && event.sx < eventOutput->logicalWidth && event.sy >= 0
+            && event.sy < eventOutput->logicalHeight) {
+          pointerOutput = eventOutput;
+        } else {
+          pointerOutput = findOutput(*m_wayland, outputAtGlobalPoint(*m_wayland, globalX, globalY));
+        }
+      }
+    }
+
+    for (auto& instance : m_instances) {
+      std::optional<std::pair<double, double>> position;
+      if (pointerOutput != nullptr && pointerOutput->output == instance->output) {
+        position.emplace(globalX - pointerOutput->logicalX, globalY - pointerOutput->logicalY);
+      }
+      if (instance->magnifierPointer != position) {
+        instance->magnifierPointer = position;
+        instance->surface->requestUpdateOnly();
+        instance->surface->requestRedraw();
+      }
+    }
   }
 
   bool ScreenshotRegionOverlay::onPointerEvent(const PointerEvent& event) {
@@ -877,6 +1044,10 @@ namespace capture {
 
     const bool onTarget =
         event.surface != nullptr && target->surface != nullptr && event.surface == target->surface->wlSurface();
+
+    if (m_showRegionMagnifier) {
+      updateMagnifierPointer(*target, event);
+    }
 
     switch (event.type) {
     case PointerEvent::Type::Enter:

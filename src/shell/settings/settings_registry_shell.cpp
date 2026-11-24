@@ -230,6 +230,13 @@ namespace settings::registry {
         {"shell", "screenshot", "show_region_dimensions"}, ToggleSetting{cfg.shell.screenshot.showRegionDimensions},
         "screenshot region dimensions size tooltip badge"
     ));
+    entries.push_back(makeEntry(
+        SettingsSection::Screenshot, "screenshot-capture",
+        tr("settings.schema.shell.screenshot-region-magnifier.label"),
+        tr("settings.schema.shell.screenshot-region-magnifier.description"),
+        {"shell", "screenshot", "region_magnifier"}, ToggleSetting{cfg.shell.screenshot.regionMagnifier},
+        "screenshot region precise pixel crosshair zoom"
+    ));
 
     entries.push_back(makeEntry(
         SettingsSection::Screenshot, "screenshot-annotation", tr("settings.schema.shell.screenshot-annotate.label"),

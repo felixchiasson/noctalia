@@ -1301,6 +1301,7 @@ struct ShellConfig {
     float regionDimOpacity = 0.65F;
     bool showRegionHint = true;
     bool showRegionDimensions = true;
+    bool regionMagnifier = false;
 
     bool operator==(const ScreenshotConfig&) const = default;
   };

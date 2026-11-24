@@ -42,6 +42,7 @@ public:
     bool freezeScreen = false;
     bool confirmRegion = false;
     bool rememberLastRegion = false;
+    bool regionMagnifier = false;
     bool showCursor = false;
     bool annotate = false;
     bool skipAnnotateOnCopySave = false;

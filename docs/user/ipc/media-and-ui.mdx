@@ -143,6 +143,7 @@ In picker mode, choose a connector from the top bar on any screen, or click the 
 | `--copy-to-clipboard` / `--no-copy-to-clipboard`                   | `copy_to_clipboard`                        |
 | `--pipe-to-command` / `--no-pipe-to-command`                       | `pipe_to_command`                          |
 | `--freeze-screen` / `--no-freeze-screen`                           | `freeze_screen`                            |
+| `--region-magnifier` / `--no-region-magnifier`                      | `region_magnifier`                         |
 | `--confirm-region` / `--no-confirm-region`                         | `confirm_region`                           |
 | `--remember-last-region` / `--no-remember-last-region`             | `remember_last_region`                     |
 | `--show-cursor` / `--no-show-cursor`                               | `show_cursor`                              |
@@ -159,6 +160,7 @@ In picker mode, choose a connector from the top bar on any screen, or click the 
 | `--quality <1-100>`                                                | `quality`                                  |
 
 - Options go before the fullscreen target or the annotate path; everything after the first non-option word is the target or path.
+- The region magnifier freezes the screen for interactive region selection, even when `freeze_screen` is disabled.
 - Quote values that contain spaces, for example `--pipe-command 'satty -f -'`.
 - Combining an option with its `--no-` form is an error, and so is an unknown option, a `--format` outside the listed values, or a `--quality` that is not a whole number from 1 to 100; the command then does nothing.
 - `--pipe-command` only sets the command; add `--pipe-to-command` when the config does not already enable piping.

@@ -3775,6 +3775,10 @@
           "description": "Opacity of the darkened area around the selected region",
           "label": "Region Dim Opacity"
         },
+        "screenshot-region-magnifier": {
+          "description": "Freeze the screen and show a 4× pixel preview beside the crosshair during region selection",
+          "label": "Region Magnifier"
+        },
         "screenshot-region-modifier": {
           "description": "Modifier to move or resize a selected region: left-drag to move, right-drag to resize from the outer thirds (corners resize both axes). None (default) keeps the plain drag-to-adjust behavior. With Space, only Enter confirms the region",
           "label": "Move/Resize Modifier"

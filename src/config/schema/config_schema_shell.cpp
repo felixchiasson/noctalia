@@ -245,6 +245,7 @@ namespace noctalia::config::schema {
           field(&ShellConfig::ScreenshotConfig::regionDimOpacity, "region_dim_opacity", kUnitRange),
           field(&ShellConfig::ScreenshotConfig::showRegionHint, "show_region_hint"),
           field(&ShellConfig::ScreenshotConfig::showRegionDimensions, "show_region_dimensions"),
+          field(&ShellConfig::ScreenshotConfig::regionMagnifier, "region_magnifier"),
           field(&ShellConfig::ScreenshotConfig::showCursor, "show_cursor"),
           field(&ShellConfig::ScreenshotConfig::annotate, "annotate"),
           field(&ShellConfig::ScreenshotConfig::skipAnnotateOnCopySave, "skip_annotate_on_copy_save"),

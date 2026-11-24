@@ -732,6 +732,9 @@ namespace {
       },
       ScreenshotBoolFlag{"--pipe-to-command", "--no-pipe-to-command", &ScreenshotService::OutputOptions::pipeToCommand},
       ScreenshotBoolFlag{"--freeze-screen", "--no-freeze-screen", &ScreenshotService::OutputOptions::freezeScreen},
+      ScreenshotBoolFlag{
+          "--region-magnifier", "--no-region-magnifier", &ScreenshotService::OutputOptions::regionMagnifier
+      },
       ScreenshotBoolFlag{"--confirm-region", "--no-confirm-region", &ScreenshotService::OutputOptions::confirmRegion},
       ScreenshotBoolFlag{
           "--remember-last-region", "--no-remember-last-region", &ScreenshotService::OutputOptions::rememberLastRegion
@@ -926,6 +929,7 @@ ScreenshotService::OutputOptions ScreenshotService::outputOptionsFromConfig(cons
   options.freezeScreen = screenshot.freezeScreen;
   options.confirmRegion = screenshot.confirmRegion;
   options.rememberLastRegion = screenshot.rememberLastRegion;
+  options.regionMagnifier = screenshot.regionMagnifier;
   options.showCursor = screenshot.showCursor;
   options.annotate = screenshot.annotate;
   options.skipAnnotateOnCopySave = screenshot.skipAnnotateOnCopySave;
@@ -1274,13 +1278,14 @@ void ScreenshotService::beginRegionCapture(
   }
 
   m_regionOutputOptions = options;
+  m_regionOutputOptions.freezeScreen = options.freezeScreen || options.regionMagnifier;
   m_regionRenderContext = &renderContext;
   m_regionFullscreenPick = false;
   if (rememberTarget) {
     rememberAnnotationCaptureTarget();
   }
 
-  if (options.freezeScreen) {
+  if (m_regionOutputOptions.freezeScreen) {
     DeferredCall::callLater([this] { beginFreezeCapture(); });
     return;
   }
@@ -1345,6 +1350,7 @@ void ScreenshotService::ensureRegionOverlay() {
   m_regionOverlay->setDimOpacity(screenshotCfg.regionDimOpacity);
   m_regionOverlay->setShowRegionHint(screenshotCfg.showRegionHint);
   m_regionOverlay->setShowRegionDimensions(screenshotCfg.showRegionDimensions);
+  m_regionOverlay->setShowRegionMagnifier(!m_regionFullscreenPick && m_regionOutputOptions.regionMagnifier);
   m_regionOverlay->setFailureCallback([this](const std::string& message) {
     m_frozenScreenshots.clear();
     m_regionFullscreenPick = false;

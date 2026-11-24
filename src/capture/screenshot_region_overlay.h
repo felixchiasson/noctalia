@@ -9,6 +9,7 @@
 #include <vector>
 
 class RenderContext;
+class Renderer;
 class WaylandConnection;
 struct KeyboardEvent;
 struct PointerEvent;
@@ -37,6 +38,7 @@ namespace capture {
     void setDimOpacity(float opacity);
     void setShowRegionHint(bool show);
     void setShowRegionDimensions(bool show);
+    void setShowRegionMagnifier(bool show);
     [[nodiscard]] std::vector<FrozenScreenshot> takeFrozenScreenshots();
     void begin(
         bool freezeScreen, bool fullscreenPick = false, bool confirmRegion = false,
@@ -73,6 +75,8 @@ namespace capture {
     void destroySurfaces();
     bool surfacesMatchOutputs() const;
     void prepareFrame(Instance& instance, bool needsUpdate, bool needsLayout);
+    void updateMagnifier(Instance& instance, Renderer& renderer);
+    void updateMagnifierPointer(const Instance& target, const PointerEvent& event);
     void abortWithError(const std::string& message);
     void updateSelectionVisuals();
     // Stores the shape on every instance and pushes it to the compositor right away.
@@ -103,6 +107,7 @@ namespace capture {
     float m_dimOpacity = 0.65F;
     bool m_showRegionHint = true;
     bool m_showRegionDimensions = true;
+    bool m_showRegionMagnifier = false;
     bool m_active = false;
     bool m_freezeScreen = false;
     bool m_fullscreenPick = false;
