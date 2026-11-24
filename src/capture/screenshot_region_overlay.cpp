@@ -987,7 +987,7 @@ namespace capture {
     double globalX = 0.0;
     double globalY = 0.0;
     if (event.type != Type::Leave) {
-      const auto* eventOutput = findOutput(*m_wayland, target.output);
+      const auto* eventOutput = m_wayland->findOutputByWl(target.output);
       if (eventOutput != nullptr) {
         globalX = eventOutput->logicalX + event.sx;
         globalY = eventOutput->logicalY + event.sy;
@@ -996,7 +996,7 @@ namespace capture {
             && event.sy < eventOutput->logicalHeight) {
           pointerOutput = eventOutput;
         } else {
-          pointerOutput = findOutput(*m_wayland, outputAtGlobalPoint(*m_wayland, globalX, globalY));
+          pointerOutput = m_wayland->findOutputByWl(outputAtGlobalPoint(*m_wayland, globalX, globalY));
         }
       }
     }
