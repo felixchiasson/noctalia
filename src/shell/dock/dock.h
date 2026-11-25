@@ -51,7 +51,6 @@ public:
   void closeAllInstances();
   void onOutputChange();
   void refresh();
-  void toggleVisibility();
   void requestLayout();
   void requestRedraw();
   bool onPointerEvent(const PointerEvent& event);

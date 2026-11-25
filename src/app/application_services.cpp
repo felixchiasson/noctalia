@@ -679,6 +679,9 @@ void Application::initStyleThemeAndWayland() {
           .x = out.logicalX,
           .y = out.logicalY,
           .scale = out.scale,
+          .pixelWidth = out.effectivePixelWidth(),
+          .pixelHeight = out.effectivePixelHeight(),
+          .scaleFactor = out.configuredScale(),
           .focused = out.output == focused,
       });
       wallpaperPaths.insert_or_assign(out.connectorName, m_configService.getWallpaperPath(out.connectorName));
@@ -1051,6 +1054,7 @@ void Application::initAuxServicesAndHooks() {
         .targetTemperature = m_gammaService.targetKelvin(),
         .dayTemperature = m_gammaService.dayTemperature(),
         .nightTemperature = m_gammaService.nightTemperature(),
+        .temperatureOverride = m_gammaService.temperatureOverride().value_or(-1),
     });
   };
   m_gammaService.setStateSnapshotCallback(syncScriptApiNightLight);
@@ -1070,6 +1074,12 @@ void Application::initAuxServicesAndHooks() {
       m_gammaService.toggleForceEnabled();
       break;
     }
+  });
+  m_scriptApi.setNightLightTemperatureHook([this](std::uint64_t hostId, std::optional<int> kelvin) {
+    m_gammaService.setTemperatureOverride(kelvin, hostId);
+  });
+  m_scriptApi.setReleaseNightLightTemperatureHook([this](std::uint64_t hostId) {
+    m_gammaService.releaseTemperatureOverride(hostId);
   });
   m_configService.addReloadCallback([this] {
     m_gammaService.reload(m_configService.config().nightlight, m_configService.config().location);
